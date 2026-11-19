@@ -1,0 +1,18 @@
+id: no-optional-import-fallback
+language: Python
+severity: error
+rule:
+  kind: try_statement
+  has:
+    kind: except_clause
+    has:
+      kind: identifier
+      regex: '^(ImportError|ModuleNotFoundError)$'
+      stopBy:
+        kind: block
+message: >-
+  禁止用 try/except ImportError 做「套件不存在就退回」的 fallback。
+note: |-
+  這種寫法會讓同一段程式有兩條行為路徑，其中一條幾乎不會被測到。
+  修正方式：把套件宣告在 pyproject.toml 的 dependencies，然後直接 import。
+  若真的是選用功能，請放進獨立模組，由 entrypoint 明確決定是否載入。

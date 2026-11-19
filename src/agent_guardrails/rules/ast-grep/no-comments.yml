@@ -1,0 +1,15 @@
+id: no-comments
+language: Python
+severity: error
+rule:
+  kind: comment
+  not:
+    regex: '^#(!|\s*(noqa|type:\s*ignore|ruff:|pyright:|mypy:|pragma:))'
+message: >-
+  禁止註解。註解會過時、無法被強制執行，也不能取代正確的程式碼。
+note: |-
+  修正方式（擇一）：
+  1. 用更精確的命名表達意圖（變數、函式、型別）。
+  2. 把這段邏輯抽成一個名稱能說明用途的函式。
+  3. 公開 API 的說明請寫成 docstring。
+  不要把註解改寫成字串常值或 docstring 來規避此規則。

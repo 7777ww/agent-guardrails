@@ -1,0 +1,17 @@
+{
+  "description": "Run agent-guardrails on every Python file Claude edits",
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/check-edited-file.sh\"",
+            "timeout": 120
+          }
+        ]
+      }
+    ]
+  }
+}

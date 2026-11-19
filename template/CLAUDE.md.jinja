@@ -1,0 +1,22 @@
+# {{ project_name }}
+
+## 架構邊界（由 import-linter 強制，不是建議）
+
+```
+src/{{ package_name }}/
+  entrypoints/   CLI、API handler、排程入口。只做組裝與參數解析。
+  adapters/      對外 I/O：資料庫、HTTP、檔案、第三方 SDK。
+  services/      用例流程。透過參數接收 adapter，不直接 import adapters。
+  domain/        純邏輯與資料型別。不做 I/O，不 import 其他三層。
+```
+
+上層可以 import 下層，反向一律禁止。
+
+## 檢查
+
+```bash
+uv run agent-guardrails check
+```
+
+每次編輯 `.py` 檔後 hook 會自動檢查該檔。錯誤訊息裡有修正方式，照做即可；
+禁止用 `noqa`、`type: ignore` 或其他方式繞過。規則不合理時請停下來告訴使用者。

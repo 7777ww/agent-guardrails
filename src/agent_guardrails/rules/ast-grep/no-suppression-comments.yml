@@ -1,0 +1,14 @@
+id: no-suppression-comments
+language: Python
+severity: error
+rule:
+  kind: comment
+  regex: '^#\s*(noqa|type:\s*ignore|ruff:\s*noqa|pyright:\s*ignore|mypy:\s*ignore|pragma:\s*no\s*cover)'
+message: >-
+  禁止用註解關閉檢查（noqa / type: ignore / pragma: no cover）。請修正根因。
+note: |-
+  修正方式：
+  1. 讀懂被關閉的那條規則在抱怨什麼，改程式碼讓它通過。
+  2. 型別錯誤請修正型別定義或做 isinstance narrowing。
+  3. 如果確定是規則本身不合理，停下來告訴使用者，由人到 agent-guardrails repo 修改規則；
+     不要在專案內自行繞過。

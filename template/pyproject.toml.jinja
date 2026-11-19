@@ -1,0 +1,33 @@
+[project]
+name = "{{ project_name }}"
+version = "0.1.0"
+requires-python = ">={{ python_version }}"
+dependencies = []
+
+[dependency-groups]
+dev = [
+    "agent-guardrails @ git+{{ guardrails_git_url }}@{{ guardrails_ref }}",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/{{ package_name }}"]
+
+[tool.agent-guardrails]
+enabled = true
+
+[tool.importlinter]
+root_package = "{{ package_name }}"
+
+[[tool.importlinter.contracts]]
+name = "分層邊界：上層可以 import 下層，反向禁止（entrypoints > adapters > services > domain）"
+type = "layers"
+layers = [
+    "{{ package_name }}.entrypoints",
+    "{{ package_name }}.adapters",
+    "{{ package_name }}.services",
+    "{{ package_name }}.domain",
+]

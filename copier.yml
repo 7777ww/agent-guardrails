@@ -1,0 +1,26 @@
+_subdirectory: template
+_min_copier_version: "9.0.0"
+
+project_name:
+  type: str
+  help: 專案名稱（kebab-case，例如 factor-backtest）
+  validator: "{% if not (project_name | regex_search('^[a-z][a-z0-9-]*$')) %}請用小寫英數與連字號{% endif %}"
+
+package_name:
+  type: str
+  help: Python package 名稱（snake_case）
+  default: "{{ project_name | replace('-', '_') }}"
+
+python_version:
+  type: str
+  help: 最低 Python 版本
+  default: "3.12"
+
+guardrails_git_url:
+  type: str
+  help: agent-guardrails repo 的 Git URL（例如 https://github.com/<owner>/agent-guardrails.git）
+
+guardrails_ref:
+  type: str
+  help: 要鎖定的 tag 或 commit（不要用 branch 名稱）
+  default: v0.1.0
