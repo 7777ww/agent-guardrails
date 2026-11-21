@@ -118,8 +118,8 @@ uv run agent-guardrails test-rules       # 專案層規則的測試
 ### 導入後的開發流程
 
 1. **開發中**：Claude 每次編輯 `.py`／`.go`，plugin 立即檢查；違規訊息直接回給 agent，修到通過才能繼續。
-2. **收尾**：你說「可以 push／開 PR／任務完成」時，plugin 提醒 agent 回顧這次犯過的錯，列出可以變成規則的候選。
-3. **確認**：你同意後才寫入規則與測試；通用的規則再以 PR 升級到這個 repo。
+2. **push 前**：你請 Claude push 時，plugin 先擋下第一次 `git push`，要求 agent 回顧這次修改，把候選規則分成專案層與共用層列給你。
+3. **確認**：你同意後才寫入。專案層規則跟這次 push 一起送出；共用層規則同步到這個 repo 並發新版。
 4. **CI**：同一套 `test-rules` 與 `check`，擋住沒經過 Claude 的修改。
 
 ## 從錯誤產生規則（自我改進迴圈）
@@ -127,18 +127,19 @@ uv run agent-guardrails test-rules       # 專案層規則的測試
 目標是讓 agent 犯過的錯變成規則，而不是變成 prompt 裡的一句提醒。
 
 ```
-agent 犯錯並修正 → 你說「可以 push／任務完成」時 hook 請 agent 回顧
-      → agent 列出「可以用程式擋下」的候選規則
-      → 你確認 → 規則 + 測試寫入專案 → 之後同樣的錯被自動擋下
+agent 犯錯並修正 → 你請 Claude push → hook 擋下第一次 git push，要求回顧
+      → agent 檢查這次修改與對話中的糾正，列出「可以用程式擋下」的候選
+      → 你確認 → 專案層：規則 + 測試跟這次 push 一起送出
+               → 共用層：同步到 agent-guardrails，發新版，之後所有專案都受保護
 ```
 
-- **觸發**：只在收尾時。你的訊息出現收尾用語（push、開 PR、merge、任務完成、可以交付、收尾…）
-  且這個 session 編輯過 opt-in 專案的 `.py`／`.go` 檔時才提醒，平常每一輪不會打擾。
-  用語可用環境變數 `AGENT_GUARDRAILS_WRAP_UP_PATTERN`（extended regex）覆寫，
-  也可以隨時手動執行 `/agent-guardrails:learn-rule`。
+- **觸發**：Claude 執行 `git push` 時（`PreToolUse` hook），而且這個 session 編輯過 opt-in 專案的
+  `.py`／`.go` 檔。每批編輯只擋一次，回顧完重新 push 就會通過。全程在本機完成，不需要 CI 或 API key。
+  你自己在終端機下的 `git push` 不會觸發；也可以隨時手動執行 `/agent-guardrails:learn-rule`。
 - **一律先確認**：hook 只負責提問並列出候選；在你明確同意之前不會建立或修改任何規則檔。
-- **兩層**：規則預設先進專案層（專案根目錄的 `rules/` 與 `rule-tests/`），
-  確認好用且具通用性後，再以 PR 升級到這個共用 repo。
+- **兩層**：只適用這個專案的規則進專案層（專案根目錄的 `rules/` 與 `rule-tests/`）；
+  任何專案都會犯的錯進共用層（這個 repo），由 agent 開 PR、發 patch 版，再把原專案鎖定的版本升上去。
+- **共用層是公開的**：寫入前 agent 會列出將公開的完整內容，並移除專案名稱與業務用語。
 - **沒有測試的規則不收**：每條專案層規則都要有同 id 的測試檔，至少各一個 `valid` 與 `invalid` 案例。
 
 ```bash
