@@ -1,0 +1,12 @@
+GUARDRAILS := uvx --from "git+{{ guardrails_git_url }}@{{ guardrails_ref }}" agent-guardrails
+
+.PHONY: check test-rules test
+
+check:
+	$(GUARDRAILS) check
+
+test-rules:
+	$(GUARDRAILS) test-rules
+
+test:
+	go test ./...

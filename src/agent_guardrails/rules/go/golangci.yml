@@ -1,0 +1,125 @@
+# 共用 Go 規則。由 `agent-guardrails check` 以 --config 強制套用，
+# 專案自己的 .golangci.yml 不會被讀取，無法放寬這裡的設定。要改規則請改這個 repo 並發新版。
+version: "2"
+
+run:
+  tests: true
+  relative-path-mode: gomod
+
+linters:
+  default: none
+  enable:
+    - bodyclose
+    - copyloopvar
+    - depguard
+    - errcheck
+    - errorlint
+    - forbidigo
+    - gocritic
+    - gocyclo
+    - gosec
+    - govet
+    - ineffassign
+    - misspell
+    - nakedret
+    - noctx
+    - predeclared
+    - revive
+    - staticcheck
+    - unconvert
+    - unparam
+    - unused
+    - usestdlibvars
+  settings:
+    gocyclo:
+      min-complexity: 10
+    nakedret:
+      max-func-lines: 0
+    errcheck:
+      check-type-assertions: true
+      check-blank: true
+    govet:
+      enable-all: true
+      disable:
+        - fieldalignment
+        - shadow
+    forbidigo:
+      analyze-types: true
+      forbid:
+        - pattern: ^fmt\.Print(f|ln)?$
+          msg: >-
+            禁止用 fmt.Print* 輸出除錯訊息：它繞過 log 設定、無法分級，也容易被遺留在正式程式碼。
+            請改用 log/slog（例如 slog.Info("msg", "key", value)）；
+            CLI 的正式輸出請明確寫入注入的 io.Writer（fmt.Fprintln(w, ...)）。
+        - pattern: ^(print|println)$
+          msg: >-
+            禁止內建 print/println：輸出到 stderr 且格式不保證，只適合 runtime 除錯。
+            請改用 log/slog；正式輸出請寫入注入的 io.Writer。
+    depguard:
+      rules:
+        deprecated:
+          list-mode: lax
+          deny:
+            - pkg: io/ioutil
+              desc: >-
+                io/ioutil 自 Go 1.16 起已棄用。請改用 os.ReadFile / os.WriteFile / os.ReadDir /
+                os.MkdirTemp / os.CreateTemp，以及 io.ReadAll / io.Discard / io.NopCloser。
+            - pkg: github.com/pkg/errors
+              desc: >-
+                github.com/pkg/errors 已封存不再維護。請用標準函式庫 errors 與
+                fmt.Errorf("...: %w", err) 包裝錯誤，以 errors.Is / errors.As 判斷。
+            - pkg: github.com/golang/protobuf
+              desc: >-
+                github.com/golang/protobuf 已棄用。請改用 google.golang.org/protobuf。
+    revive:
+      rules:
+        - name: blank-imports
+        - name: context-as-argument
+        - name: context-keys-type
+        - name: dot-imports
+        - name: error-naming
+        - name: error-return
+        - name: error-strings
+        - name: errorf
+        - name: exported
+        - name: increment-decrement
+        - name: indent-error-flow
+        - name: package-comments
+        - name: range
+        - name: receiver-naming
+        - name: redefines-builtin-id
+        - name: superfluous-else
+        - name: time-naming
+        - name: unexported-return
+        - name: unreachable-code
+        - name: unused-parameter
+        - name: var-declaration
+        - name: var-naming
+        - name: early-return
+        - name: unnecessary-stmt
+        - name: deep-exit
+  exclusions:
+    generated: strict
+    presets: []
+    rules:
+      - path: _test\.go$
+        linters:
+          - errcheck
+          - gocyclo
+          - gosec
+          - noctx
+          - unparam
+          - bodyclose
+      - path: _test\.go$
+        linters:
+          - revive
+        text: "^(exported|deep-exit|unused-parameter)"
+
+issues:
+  max-issues-per-linter: 0
+  max-same-issues: 0
+
+formatters:
+  enable:
+    - gofmt
+    - goimports

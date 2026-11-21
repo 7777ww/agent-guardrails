@@ -7,7 +7,7 @@
     {
       "name": "agent-guardrails",
       "source": "./",
-      "description": "每次 Claude 編輯 Python 檔後自動執行共用 guardrails，違規時強制 agent 修正。"
+      "description": "每次 Claude 編輯 Python 或 Go 檔後自動執行共用 guardrails，違規時強制 agent 修正。"
     }
   ]
 }

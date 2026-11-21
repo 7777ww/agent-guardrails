@@ -1,7 +1,7 @@
 {
   "name": "agent-guardrails",
-  "version": "0.2.0",
-  "description": "每次 Claude 編輯 Python 檔後自動執行共用 guardrails（Ruff + ast-grep），違規時把錯誤訊息回饋給 agent 強制修正。只對已 opt-in 的專案生效。",
+  "version": "0.3.0",
+  "description": "每次 Claude 編輯 Python 或 Go 檔後自動執行共用 guardrails（Ruff／golangci-lint + ast-grep），違規時把錯誤訊息回饋給 agent 強制修正。只對已 opt-in 的專案生效。",
   "author": {
     "name": "agent-guardrails maintainers"
   }

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # UserPromptSubmit hook：只有在使用者送出「收尾」訊息（接受任務、允許 push、開 PR…）
-# 且這個 session 編輯過 opt-in 專案的 Python 檔時，才請 agent 回顧
+# 且這個 session 編輯過 opt-in 專案的受檢查檔案（.py / .go）時，才請 agent 回顧
 # 「有沒有犯過可以用規則擋下的錯」，並把候選規則列給使用者確認。
 # 這個 hook 只負責「提醒」；任何規則檔的新增都必須先得到使用者同意。
 set -uo pipefail
@@ -10,7 +10,7 @@ input="$(cat)"
 source "$(dirname "${BASH_SOURCE[0]}")/session-state.sh"
 marker="$(edited_marker "$input")"
 
-# 標記只會在 opt-in 專案的 Python 檔被編輯時產生；沒有標記就不打擾。
+# 標記只會在 opt-in 專案的受檢查檔案被編輯時產生；沒有標記就不打擾。
 [[ -f "$marker" ]] || exit 0
 
 # 收尾用語。可用環境變數 AGENT_GUARDRAILS_WRAP_UP_PATTERN 覆寫（extended regex，不分大小寫）。

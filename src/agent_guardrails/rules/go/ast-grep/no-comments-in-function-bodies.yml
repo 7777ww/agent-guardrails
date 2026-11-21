@@ -1,0 +1,22 @@
+id: no-comments-in-function-bodies
+language: go
+severity: error
+rule:
+  all:
+    - kind: comment
+    - inside:
+        kind: block
+        stopBy: end
+    - not:
+        regex: '(?i)^(//|/\*)\s*(nolint|lint:(file-)?ignore)|#nosec'
+    - not:
+        matches: in-generated-file
+message: >-
+  禁止在函式內寫註解。註解會過時、無法被強制執行，也不能取代正確的程式碼。
+note: |-
+  修正方式（擇一）：
+  1. 用更精確的命名表達意圖（變數、函式、型別）。
+  2. 把這段邏輯抽成一個名稱能說明用途的函式，並在該函式宣告上方寫 doc comment。
+  3. 公開 API 的說明請寫成宣告上方的 doc comment（// Name ...），而不是函式內部。
+  //go: 指令（//go:noinline、//go:embed 等）只能放在宣告上方，函式內沒有合法用途，因此也一律禁止。
+  不要把註解改寫成字串常值或無用變數來規避此規則。

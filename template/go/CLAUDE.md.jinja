@@ -1,0 +1,28 @@
+# {{ project_name }}
+
+## 架構邊界（由 go-arch-lint 強制，不是建議）
+
+```
+cmd/{{ project_name }}/   main：只做組裝，把各層接起來。
+internal/
+  entrypoints/   CLI、API handler、排程入口。只做組裝與參數解析。
+  adapters/      對外 I/O：資料庫、HTTP、檔案、第三方 SDK。
+  services/      用例流程。透過參數（interface）接收 adapter，不直接 import adapters。
+  domain/        純邏輯與資料型別。不做 I/O，不 import 其他三層。
+```
+
+上層可以 import 下層，反向一律禁止。規則定義在 `.go-arch-lint.yml`。
+
+## 檢查
+
+```bash
+make check        # golangci-lint、ast-grep 規則、go-arch-lint
+make test         # go test ./...
+```
+
+專案專屬的規則放在 `rules/`，每條都要在 `rule-tests/` 有同 id 的測試，
+以 `make test-rules` 驗證。新增規則請走 `/agent-guardrails:learn-rule`，
+並且一律先取得使用者同意。
+
+每次編輯 `.go` 檔後 hook 會自動檢查該檔。錯誤訊息裡有修正方式，照做即可；
+禁止用 `//nolint` 或其他方式繞過。規則不合理時請停下來告訴使用者。

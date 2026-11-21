@@ -1,4 +1,4 @@
-_subdirectory: template
+_subdirectory: "template/{{ language }}"
 _min_copier_version: "9.0.0"
 
 project_name:
@@ -6,21 +6,46 @@ project_name:
   help: 專案名稱（kebab-case，例如 factor-backtest）
   validator: "{% if not (project_name | regex_search('^[a-z][a-z0-9-]*$')) %}請用小寫英數與連字號{% endif %}"
 
+language:
+  type: str
+  help: 專案語言
+  choices:
+    - python
+    - go
+  default: python
+
 package_name:
   type: str
   help: Python package 名稱（snake_case）
   default: "{{ project_name | replace('-', '_') }}"
+  when: "{{ language == 'python' }}"
 
 python_version:
   type: str
   help: 最低 Python 版本
   default: "3.12"
+  when: "{{ language == 'python' }}"
+
+go_module:
+  type: str
+  help: Go module path（例如 github.com/<owner>/<project_name>）
+  default: "example.com/{{ project_name }}"
+  validator: "{% if not (go_module | regex_search('^[a-z0-9][A-Za-z0-9._~/-]*[A-Za-z0-9]$')) %}請填合法的 Go module path{% endif %}"
+  when: "{{ language == 'go' }}"
+
+go_version:
+  type: str
+  help: go.mod 的 go 版本（guardrails 的 Go 工具需要 Go >= 1.26）
+  default: "1.26"
+  validator: "{% if not (go_version | regex_search('^1\\.[0-9]+(\\.[0-9]+)?$')) %}請填 Go 版本，例如 1.26{% endif %}"
+  when: "{{ language == 'go' }}"
 
 guardrails_git_url:
   type: str
-  help: agent-guardrails repo 的 Git URL（例如 https://github.com/<owner>/agent-guardrails.git）
+  help: agent-guardrails repo 的 Git URL
+  default: https://github.com/7777ww/agent-guardrails.git
 
 guardrails_ref:
   type: str
   help: 要鎖定的 tag 或 commit（不要用 branch 名稱）
-  default: v0.2.0
+  default: v0.3.0

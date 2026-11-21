@@ -1,0 +1,12 @@
+id: in-generated-file
+language: go
+rule:
+  inside:
+    kind: source_file
+    stopBy: end
+    has:
+      kind: comment
+      regex: '^// Code generated .* DO NOT EDIT\.$'
+      precedes:
+        kind: package_clause
+        stopBy: end

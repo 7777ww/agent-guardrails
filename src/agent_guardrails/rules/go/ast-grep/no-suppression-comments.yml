@@ -1,0 +1,16 @@
+id: no-suppression-comments
+language: go
+severity: error
+rule:
+  kind: comment
+  regex: '(?i)^(//|/\*)\s*(nolint|lint:(file-)?ignore)|#nosec'
+  not:
+    matches: in-generated-file
+message: >-
+  禁止用註解關閉檢查（//nolint、//lint:ignore、#nosec）。請修正根因。
+note: |-
+  修正方式：
+  1. 讀懂被關閉的那條規則在抱怨什麼，改程式碼讓它通過。
+  2. 未處理的 error 請明確處理或回傳（fmt.Errorf("...: %w", err)），不要丟棄。
+  3. 如果確定是規則本身不合理，停下來告訴使用者，由人到 agent-guardrails repo 修改規則；
+     不要在專案內自行繞過。
