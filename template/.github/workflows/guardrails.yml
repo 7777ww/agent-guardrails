@@ -15,4 +15,5 @@ jobs:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v6
       - run: uv sync --dev
+      - run: uv run agent-guardrails test-rules
       - run: uv run agent-guardrails check

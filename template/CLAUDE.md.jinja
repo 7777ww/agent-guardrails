@@ -18,5 +18,9 @@ src/{{ package_name }}/
 uv run agent-guardrails check
 ```
 
+專案專屬的規則放在 `rules/`，每條都要在 `rule-tests/` 有同 id 的測試，
+以 `uv run agent-guardrails test-rules` 驗證。新增規則請走 `/agent-guardrails:learn-rule`，
+並且一律先取得使用者同意。
+
 每次編輯 `.py` 檔後 hook 會自動檢查該檔。錯誤訊息裡有修正方式，照做即可；
 禁止用 `noqa`、`type: ignore` 或其他方式繞過。規則不合理時請停下來告訴使用者。

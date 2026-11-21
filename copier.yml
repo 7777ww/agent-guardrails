@@ -23,4 +23,4 @@ guardrails_git_url:
 guardrails_ref:
   type: str
   help: 要鎖定的 tag 或 commit（不要用 branch 名稱）
-  default: v0.1.0
+  default: v0.2.0
