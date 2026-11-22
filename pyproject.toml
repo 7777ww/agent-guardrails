@@ -3,6 +3,8 @@ name = "agent-guardrails"
 version = "0.3.0"
 description = "Shared, enforced code constraints for AI coding agents (Python)."
 readme = "README.md"
+license = "MIT"
+license-files = ["LICENSE"]
 requires-python = ">=3.10"
 dependencies = [
     "ruff>=0.8",
