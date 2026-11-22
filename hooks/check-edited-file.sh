@@ -22,7 +22,7 @@ project="$(opted_in_project_root "$file")" || exit 0
 # 檔案語言與專案語言不同時不檢查（例如 Python 專案裡的 .go 工具腳本）。
 [[ "$(project_language "$project")" == "$file_language" ]] || exit 0
 
-# 記下「這個 session 編輯過受檢查的檔案」，收尾時 propose-rules.sh 據此決定要不要請 agent 回顧。
+# 記下「這個 session 編輯過受檢查的檔案」，git push 前 review-before-push.sh 據此決定要不要請 agent 回顧。
 touch "$(edited_marker "$input")"
 
 # Go 檔：帶有產生器標頭的檔案必須由產生器產生，不接受 agent 手動編輯；

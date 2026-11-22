@@ -1,5 +1,5 @@
 {
-  "description": "Check every Python or Go file Claude edits in an opted-in project, and when the user wraps up a task ask whether any mistake should become a new rule",
+  "description": "Check every Python or Go file Claude edits in an opted-in project, and before Claude runs git push ask whether any mistake in this change should become a new rule",
   "hooks": {
     "PostToolUse": [
       {
@@ -13,12 +13,13 @@
         ]
       }
     ],
-    "UserPromptSubmit": [
+    "PreToolUse": [
       {
+        "matcher": "Bash",
         "hooks": [
           {
             "type": "command",
-            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/propose-rules.sh\"",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/review-before-push.sh\"",
             "timeout": 10
           }
         ]
