@@ -1,0 +1,40 @@
+version: 3
+workdir: .
+
+allow:
+  depOnAnyVendor: true
+
+components:
+  main:
+    in: cmd/**
+  entrypoints:
+    in: internal/entrypoints/**
+  adapters:
+    in: internal/adapters/**
+  services:
+    in: internal/services/**
+  domain:
+    in: internal/domain/**
+
+# 分層邊界：上層可以 import 下層，反向禁止（entrypoints > adapters > services > domain）
+deps:
+  main:
+    mayDependOn:
+      - entrypoints
+      - adapters
+      - services
+      - domain
+  entrypoints:
+    mayDependOn:
+      - adapters
+      - services
+      - domain
+  adapters:
+    mayDependOn:
+      - services
+      - domain
+  services:
+    mayDependOn:
+      - domain
+  domain:
+    anyVendorDeps: true

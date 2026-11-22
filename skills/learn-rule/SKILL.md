@@ -38,7 +38,7 @@ description: 把 agent 犯過的錯變成一條 guardrails 規則，讓同樣的
 | 層 | 位置 | 何時選 |
 |---|---|---|
 | 專案層 | 目前專案的 `rules/` 與 `rule-tests/` | 預設。錯誤與這個專案的架構或慣例有關 |
-| 共用層 | agent-guardrails repo | 任何 Python 專案都會犯的錯，而且已在專案層驗證過好用 |
+| 共用層 | agent-guardrails repo | 任何同語言（Python 或 Go）專案都會犯的錯，而且已在專案層驗證過好用 |
 
 拿不定主意時先放專案層。
 
@@ -57,7 +57,7 @@ description: 把 agent 犯過的錯變成一條 guardrails 規則，讓同樣的
 
    ```yaml
    id: no-naive-datetime-now
-   language: Python
+   language: Python   # Go 專案寫 go
    severity: error
    rule:
      pattern: datetime.now()

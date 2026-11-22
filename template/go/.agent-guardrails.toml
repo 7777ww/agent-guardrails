@@ -1,0 +1,2 @@
+# 啟用 agent-guardrails 的 Go 檢查
+language = "go"

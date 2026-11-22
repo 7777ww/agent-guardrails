@@ -5,9 +5,9 @@
 
 | 層 | 內容 | 位置 |
 |---|---|---|
-| 1. 共用規則套件 | Ruff 基礎設定、ast-grep 規則、單一入口 CLI `agent-guardrails check` | `src/agent_guardrails/` |
-| 2. 專案模板 | copier 模板：分層目錄、import-linter contract、CI、Claude 設定 | `copier.yml`、`template/` |
-| 3. Claude Code plugin | PostToolUse hook：Claude 每次編輯 `.py` 就檢查，違規時強制修正 | `.claude-plugin/`、`hooks/`、`skills/` |
+| 1. 共用規則套件 | Python（Ruff）與 Go（golangci-lint）基礎設定、ast-grep 規則、單一入口 CLI `agent-guardrails check` | `src/agent_guardrails/` |
+| 2. 專案模板 | copier 模板（Python／Go）：分層目錄、邊界檢查、CI、Claude 設定 | `copier.yml`、`template/python/`、`template/go/` |
+| 3. Claude Code plugin | PostToolUse hook：Claude 每次編輯 `.py`／`.go` 就檢查，違規時強制修正 | `.claude-plugin/`、`hooks/`、`skills/` |
 
 ## 規則
 
@@ -25,7 +25,7 @@ Ruff 設定以 `--config` 強制套用，專案的 `pyproject.toml` 無法放寬
 
 ## 快速開始
 
-需求：[uv](https://docs.astral.sh/uv/)、`jq`、Claude Code。目前支援 Python 專案；其他語言見「[其他語言](#其他語言gotypescript)」。
+需求：[uv](https://docs.astral.sh/uv/)、`jq`、Claude Code。支援 Python 與 Go 專案；Go 的差異見「[Go 專案](#go-專案)」。
 
 ### 0. 每台電腦一次：安裝 plugin
 
@@ -37,19 +37,35 @@ claude plugin marketplace add https://github.com/7777ww/agent-guardrails.git
 claude plugin install agent-guardrails@guardrails
 ```
 
-Plugin 只對 `pyproject.toml` 內有 `[tool.agent-guardrails]` 的專案生效，裝了不會影響其他專案。
+Plugin 只對已 opt-in 的專案生效（`pyproject.toml` 內有 `[tool.agent-guardrails]`，或根目錄有 `.agent-guardrails.toml`），裝了不會影響其他專案。
+
+在 Claude Code 裡說「開新專案」，`/agent-guardrails:new-project` 會替你完成下面 A 的所有步驟。
 
 ### A. 開新專案：用模板直接產生
 
+Python：
+
 ```bash
-uvx copier copy gh:7777ww/agent-guardrails my-project
+uvx copier copy --defaults --data language=python --data project_name=my-project gh:7777ww/agent-guardrails my-project
 ```
 
 ```bash
 cd my-project && git init && uv sync && uv run agent-guardrails check
 ```
 
-產生出來的專案已經包含：
+Go：
+
+```bash
+uvx copier copy --defaults --data language=go --data project_name=my-svc --data go_module=github.com/<owner>/my-svc gh:7777ww/agent-guardrails my-svc
+```
+
+```bash
+cd my-svc && git init && go build ./... && make check
+```
+
+拿掉 `--defaults` 與 `--data` 就會改成互動式詢問。
+
+產生出來的 Python 專案已經包含（Go 專案對應的檔案見「[Go 專案](#go-專案)」）：
 
 | 內容 | 檔案 |
 |---|---|
@@ -74,7 +90,7 @@ uvx copier update
 手動導入只要三步：
 
 ```bash
-uv add --dev "agent-guardrails @ git+https://github.com/7777ww/agent-guardrails.git@v0.2.0"
+uv add --dev "agent-guardrails @ git+https://github.com/7777ww/agent-guardrails.git@v0.3.0"
 ```
 
 在 `pyproject.toml` 加上 opt-in 標記：
@@ -89,7 +105,7 @@ uv run agent-guardrails check
 ```
 
 既有專案第一次跑通常會有大量違規。先看數量再決定清理順序，不要用 `noqa` 一次蓋掉。
-需要 import 邊界時，再於 `[tool.importlinter]` 定義 contract；需要 CI 時，複製 `template/.github/workflows/guardrails.yml`。
+需要 import 邊界時，再於 `[tool.importlinter]` 定義 contract；需要 CI 時，複製 `template/python/.github/workflows/guardrails.yml`。
 
 ### 日常指令
 
@@ -101,7 +117,7 @@ uv run agent-guardrails test-rules       # 專案層規則的測試
 
 ### 導入後的開發流程
 
-1. **開發中**：Claude 每次編輯 `.py`，plugin 立即檢查；違規訊息直接回給 agent，修到通過才能繼續。
+1. **開發中**：Claude 每次編輯 `.py`／`.go`，plugin 立即檢查；違規訊息直接回給 agent，修到通過才能繼續。
 2. **收尾**：你說「可以 push／開 PR／任務完成」時，plugin 提醒 agent 回顧這次犯過的錯，列出可以變成規則的候選。
 3. **確認**：你同意後才寫入規則與測試；通用的規則再以 PR 升級到這個 repo。
 4. **CI**：同一套 `test-rules` 與 `check`，擋住沒經過 Claude 的修改。
@@ -117,7 +133,7 @@ agent 犯錯並修正 → 你說「可以 push／任務完成」時 hook 請 age
 ```
 
 - **觸發**：只在收尾時。你的訊息出現收尾用語（push、開 PR、merge、任務完成、可以交付、收尾…）
-  且這個 session 編輯過 opt-in 專案的 Python 檔時才提醒，平常每一輪不會打擾。
+  且這個 session 編輯過 opt-in 專案的 `.py`／`.go` 檔時才提醒，平常每一輪不會打擾。
   用語可用環境變數 `AGENT_GUARDRAILS_WRAP_UP_PATTERN`（extended regex）覆寫，
   也可以隨時手動執行 `/agent-guardrails:learn-rule`。
 - **一律先確認**：hook 只負責提問並列出候選；在你明確同意之前不會建立或修改任何規則檔。
@@ -131,29 +147,43 @@ uv run agent-guardrails test-rules
 
 不適合變成規則的錯誤（邏輯錯誤、誤解需求）應該寫成測試，`learn-rule` 會先做這個判斷。
 
-## 其他語言（Go、TypeScript…）
+## Go 專案
 
-目前的 CLI、hook 與模板只處理 Python：hook 會略過非 `.py` 檔，`check` 執行的是 Ruff。
-其他語言還不能直接導入，但方法相同，可以用該語言的工具組出同樣的三層。以 Go 為例：
+Go 專案使用同一個 CLI、同一個 plugin hook、同一套收尾流程，差別只在底層工具：
 
-| 這個 repo（Python） | Go 的對應工具 |
-|---|---|
-| Ruff 嚴格設定 | `golangci-lint`（staticcheck、revive、errcheck、gocyclo 等） |
-| `TID251` 禁用 API + 自訂訊息 | `golangci-lint` 的 `forbidigo`（禁用函式）與 `depguard`（禁用套件），兩者都能寫說明訊息 |
-| 禁止 `noqa` 類的略過註解 | `nolintlint` |
-| ast-grep 自訂規則 | 同樣用 ast-grep，規則寫 `language: go`；`rules/` + `rule-tests/` 的結構與測試方式不變 |
-| import-linter 分層邊界 | `depguard` 或 `go-arch-lint`；另外 Go 的 `internal/` 目錄由編譯器強制 |
-| 單一入口 `agent-guardrails check` | 專案自己的 `make check`（或同等指令），CI 與 hook 都呼叫它 |
+| | Python | Go |
+|---|---|---|
+| opt-in 標記 | `pyproject.toml` 的 `[tool.agent-guardrails]` | 專案根目錄的 `.agent-guardrails.toml`，內容 `language = "go"` |
+| 基礎 lint（強制設定，專案無法放寬） | Ruff | golangci-lint（`src/agent_guardrails/rules/go/golangci.yml`） |
+| 禁用 API 與套件 | `TID251` | `forbidigo`（`fmt.Print*`、`print`、`println`）、`depguard`（`io/ioutil` 等） |
+| 禁止略過註解 | `no-suppression-comments` | `no-suppression-comments`（`//nolint`、`//lint:ignore`、`#nosec`） |
+| 註解 | 只允許 docstring | 函式內不可有任何註解（包含 `//go:` 開頭的）；函式外的註解不受限 |
+| 分層邊界 | import-linter | go-arch-lint（專案根目錄的 `.go-arch-lint.yml`） |
+| 執行方式 | `uv run agent-guardrails check` | `make check`（內部以 `uvx` 執行鎖定版本的 CLI） |
 
-要讓 Claude Code 在編輯 Go 檔後自動檢查，在該專案的 `.claude/settings.json` 加一個 PostToolUse hook 呼叫 `make check`，
-失敗時以 exit code 2 結束並把輸出寫到 stderr，agent 就會收到錯誤並修正。
+需求：Go 1.26 以上、`uv`、`jq`。golangci-lint 與 go-arch-lint 不需要自己安裝：CLI 第一次執行時會以鎖定的版本
+`go install` 到 `~/.cache/agent-guardrails/bin/`（可用 `XDG_CACHE_HOME` 改位置），不會動到你的 `PATH`。
+第一次需要網路，耗時十幾秒到數分鐘；Go 升版後會重新安裝一次。
 
-把 Go 正式納入這個 repo（語言偵測、Go 規則包、Go 模板）尚未實作。
+注意事項：
+
+- 專案自己的 `.golangci.yml` 不會被讀取。專案專屬的限制請寫成專案層規則（`rules/`，`language: go`）。
+- 指定檔案的 `check` 會檢查該檔所在的整個 package；只看該語言的檔案，其他副檔名會被略過。
+- 巢狀 module 會各自檢查。`testdata/`、`vendor/`、以 `_` 或 `.` 開頭的目錄不檢查，與 Go 本身一致。
+- `go.mod` 內有 `ignore` 指令時，整個專案的 `check` 會失敗，因為被忽略的目錄仍會被編譯卻不會被檢查。
+- 產生檔（`package` 之前有 `// Code generated ... DO NOT EDIT.`）不檢查。Claude 編輯這種檔案時 hook 會拒絕，
+  要求改用產生器；手寫程式不可帶這個標頭。人手動加上標頭仍可略過檢查，請在 code review 把關。
+- Hook 在 Go 專案優先使用 plugin 內附的 CLI 版本，`make check` 與 CI 使用 `Makefile` 鎖定的版本；升級時兩邊一起更新。
+- 既有 Go 專案手動導入：加上 `.agent-guardrails.toml`，再參考 `template/go/` 的 `Makefile.jinja`（把 `{{ ... }}` 換成實際的 repo URL 與 tag）、`sgconfig.yml` 與 CI workflow。
+
+## 其他語言
+
+TypeScript 等其他語言尚未支援。
 
 ## 修改規則
 
-1. 改 `src/agent_guardrails/rules/` 下的檔案，錯誤訊息務必寫明「為什麼禁止」與「正確做法」。
-2. 在 `tests/test_rules.py` 加上對應的違規案例，執行 `uv run pytest`。
+1. 改 `src/agent_guardrails/rules/` 下的檔案（Go 規則在 `rules/go/`），錯誤訊息務必寫明「為什麼禁止」與「正確做法」。
+2. 在 `tests/test_rules.py`（Go：`tests/test_go_rules.py`）加上對應的違規案例，執行 `uv run pytest`。
 3. 更新 `pyproject.toml` 與 `.claude-plugin/plugin.json` 的版本，打 tag。
 4. 各專案把 `guardrails_ref` 改成新 tag（`uvx copier update`），各電腦執行 `claude plugin marketplace update guardrails`。
 
@@ -161,4 +191,6 @@ uv run agent-guardrails test-rules
 
 - Hook 會以你的使用者權限執行 shell 指令。只從你信任、且有 review 流程的 repo 安裝這個 plugin。
 - 專案一律鎖定 tag 或 commit，不要追 branch。
+- Python 專案的 hook 會優先執行專案內的 `.venv/bin/agent-guardrails`。開啟不是你自己建立的 repo 前，先確認 `.venv` 沒有被 commit 進去。
+- Go 的檢查工具以鎖定版本 `go install` 取得，並由 Go checksum database 驗證；不要為了加速而關閉 `GOSUMDB`。
 - 若 repo 是 private，CI 需要另外提供唯讀的 deploy key 或 token 才能安裝 dev dependency；不要把 token 寫進 `pyproject.toml`。

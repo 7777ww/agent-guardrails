@@ -1,5 +1,5 @@
 {
-  "description": "Check every Python file Claude edits, and when the user wraps up a task ask whether any mistake should become a new rule",
+  "description": "Check every Python or Go file Claude edits in an opted-in project, and when the user wraps up a task ask whether any mistake should become a new rule",
   "hooks": {
     "PostToolUse": [
       {
@@ -8,7 +8,7 @@
           {
             "type": "command",
             "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/check-edited-file.sh\"",
-            "timeout": 120
+            "timeout": 300
           }
         ]
       }
