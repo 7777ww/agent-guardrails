@@ -1,5 +1,5 @@
 {
-  "description": "Run agent-guardrails on every Python file Claude edits",
+  "description": "Check every Python file Claude edits, and when the user wraps up a task ask whether any mistake should become a new rule",
   "hooks": {
     "PostToolUse": [
       {
@@ -9,6 +9,17 @@
             "type": "command",
             "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/check-edited-file.sh\"",
             "timeout": 120
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/propose-rules.sh\"",
+            "timeout": 10
           }
         ]
       }

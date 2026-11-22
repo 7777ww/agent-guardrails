@@ -46,6 +46,23 @@ def test_clean_code_passes(tmp_path: Path) -> None:
     assert result.returncode == 0, result.stdout + result.stderr
 
 
+def test_test_files_may_assert_from_any_working_directory(tmp_path: Path) -> None:
+    project = tmp_path / "project"
+    elsewhere = tmp_path / "elsewhere"
+    (project / "tests").mkdir(parents=True)
+    elsewhere.mkdir()
+    target = project / "tests" / "checks.py"
+    target.write_text('"""Checks."""\n\nassert 1 + 1 == 2\n', encoding="utf-8")
+    result = subprocess.run(
+        [sys.executable, "-m", "agent_guardrails", "check", str(target)],
+        cwd=elsewhere,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert result.returncode == 0, result.stdout + result.stderr
+
+
 @pytest.mark.parametrize("rule_id", sorted(VIOLATIONS))
 def test_violation_is_rejected(tmp_path: Path, rule_id: str) -> None:
     result = _check(tmp_path, VIOLATIONS[rule_id])

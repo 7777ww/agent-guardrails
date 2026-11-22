@@ -8,10 +8,13 @@ file="$(printf '%s' "$input" | jq -r '.tool_input.file_path // empty')"
 
 [[ "$file" == *.py && -f "$file" ]] || exit 0
 
-project="${CLAUDE_PROJECT_DIR:-$PWD}"
+source "$(dirname "${BASH_SOURCE[0]}")/session-state.sh"
 
-# 只對 opt-in 的專案生效：pyproject.toml 內要有 [tool.agent-guardrails]。
-grep -qs '^\[tool\.agent-guardrails\]' "$project/pyproject.toml" || exit 0
+# 只對 opt-in 的專案生效：檔案所屬專案的 pyproject.toml 內要有 [tool.agent-guardrails]。
+project="$(opted_in_project_root "$file")" || exit 0
+
+# 記下「這個 session 編輯過 Python 檔」，收尾時 propose-rules.sh 據此決定要不要請 agent 回顧。
+touch "$(edited_marker "$input")"
 
 # 優先使用專案自己鎖定的版本，其次是全域安裝，最後才用 plugin 內附的版本。
 if [[ -x "$project/.venv/bin/agent-guardrails" ]]; then
